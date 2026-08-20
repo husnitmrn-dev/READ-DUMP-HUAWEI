@@ -72,6 +72,7 @@
     </section>
   </main>
 <script>
+  const knownSheets = ["目录", "异常数据", "成功无数据", "Dsp VSWR Test Result", "List BFANT Configuration", "List PDSCH Configuration", "List Pa parameters for PDSCH po", "Display RET Subunit Dynamic Inf", "List RLC PDCP Parameter Group", "List Cell MLB Configuration", "List Parameters Group of InterF", "Display RET Dynamic Information", "Display RET Device Data Dynamic", "LST ALMAF", "Display static parameters of ce", "List Cell Algorithm Switch Conf", "Display Cell UEs Access Statist", "Display Physical Topology of Ce"];
   const state = { worker: null, workbookReady: false, headers: [], rows: [], sheet: "" };
   const fileInput = document.querySelector("#file-input");
   const dropzone = document.querySelector("#dropzone");
@@ -92,8 +93,10 @@
     self.onmessage = event => {
       try {
         if (event.data.type === "load") {
+          workbook = XLSX.read(event.data.buffer, { type:"array", bookSheets:true });
+          self.postMessage({ type:"sheets", sheets: workbook.SheetNames });
           workbook = XLSX.read(event.data.buffer, { type:"array", cellDates:true });
-          self.postMessage({ type:"ready", sheets: workbook.SheetNames });
+          self.postMessage({ type:"ready" });
         }
         if (event.data.type === "search") {
           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[event.data.sheet], { header:1, defval:"" });
@@ -111,10 +114,15 @@
     if (state.worker) state.worker.terminate();
     state.worker = new Worker(URL.createObjectURL(new Blob([workerSource], { type:"text/javascript" })));
     state.worker.onmessage = event => {
-      if (event.data.type === "ready") {
+      if (event.data.type === "sheets") {
         const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => event.data.sheets.includes(name));
         sheetSelect.replaceChildren(...event.data.sheets.map(name => new Option(name, name)));
         sheetSelect.value = preferred || event.data.sheets[0];
+        state.sheet = sheetSelect.value;
+        sheetSelect.disabled = false;
+        status.textContent = `${event.data.sheets.length} sheet ditemukan. Menyiapkan data...`;
+      }
+      if (event.data.type === "ready") {
         state.sheet = sheetSelect.value;
         state.workbookReady = true;
         setEnabled(true);
@@ -152,8 +160,13 @@
     state.workbookReady = false;
     setEnabled(false);
     clearResults();
+    const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => knownSheets.includes(name));
+    sheetSelect.replaceChildren(...knownSheets.map(name => new Option(name, name)));
+    sheetSelect.value = preferred || knownSheets[0];
+    sheetSelect.disabled = false;
+    state.sheet = sheetSelect.value;
     fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
-    status.textContent = "Membaca workbook di worker... halaman tetap dapat digunakan.";
+    status.textContent = "Daftar sheet siap. Menyiapkan data untuk pencarian...";
     const buffer = await file.arrayBuffer();
     createWorker().postMessage({ type:"load", buffer }, [buffer]);
   }
