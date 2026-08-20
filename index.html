@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huawei Dump Viewer</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root { --ink:#17221d; --muted:#64726a; --paper:#f4f1e8; --panel:#fffdf7; --line:#d8d9ca; --green:#176b4d; --lime:#c8e86b; --orange:#ef8b43; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:radial-gradient(circle at 10% 0%,#e4edcf 0 18%,transparent 42%),var(--paper); font-family:Georgia,"Times New Roman",serif; }
+    .shell { max-width:1400px; margin:auto; padding:34px 24px 48px; }
+    header { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:28px; }
+    .eyebrow { color:var(--green); font:700 12px/1.2 system-ui,sans-serif; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:7px 0 0; font-size:clamp(36px,6vw,72px); line-height:.95; font-weight:500; letter-spacing:0; }
+    .privacy { max-width:300px; padding:14px 16px; border-left:4px solid var(--orange); color:var(--muted); font:14px/1.45 system-ui,sans-serif; }
+    .workspace { display:grid; grid-template-columns:minmax(270px,330px) 1fr; gap:18px; align-items:start; }
+    .panel { background:rgba(255,253,247,.88); border:1px solid var(--line); box-shadow:0 12px 32px rgba(23,34,29,.06); }
+    .controls { padding:20px; }
+    .dropzone { display:block; border:1.5px dashed var(--green); background:#edf5df; padding:22px 16px; text-align:center; cursor:pointer; transition:.2s; }
+    .dropzone:hover,.dropzone.drag { background:var(--lime); }
+    .dropzone strong { display:block; font-size:20px; font-weight:500; }
+    .dropzone span { display:block; margin-top:7px; color:var(--muted); font:13px/1.4 system-ui,sans-serif; }
+    input[type=file] { display:none; }
+    label { display:block; margin:20px 0 7px; color:var(--muted); font:700 11px system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+    select,input[type=text],button { width:100%; min-height:44px; border:1px solid var(--line); background:white; color:var(--ink); padding:10px 12px; font:15px system-ui,sans-serif; }
+    button { border:0; background:var(--green); color:white; cursor:pointer; font-weight:700; }
+    button:hover { background:#0e5039; }
+    button.secondary { margin-top:9px; background:transparent; color:var(--green); border:1px solid var(--green); }
+    button:disabled,select:disabled,input:disabled { opacity:.48; cursor:not-allowed; }
+    .status { margin-top:18px; color:var(--muted); font:13px/1.45 system-ui,sans-serif; }
+    .results { min-width:0; }
+    .results-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px 20px; border-bottom:1px solid var(--line); }
+    .results-head h2 { margin:0; font-size:24px; font-weight:500; }
+    .count { color:var(--green); font:700 13px system-ui,sans-serif; }
+    .table-wrap { overflow:auto; max-height:66vh; }
+    table { width:100%; border-collapse:collapse; font:13px/1.35 system-ui,sans-serif; white-space:nowrap; }
+    th { position:sticky; top:0; background:#e8efdb; color:var(--green); text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+    th,td { padding:11px 13px; border-bottom:1px solid #e6e6da; }
+    tbody tr:hover { background:#faf8ec; }
+    .empty { padding:56px 24px; text-align:center; color:var(--muted); font-size:18px; }
+    @media (max-width:760px) { .shell { padding:22px 14px 34px; } header { display:block; } .privacy { margin-top:18px; max-width:none; } .workspace { grid-template-columns:1fr; } .table-wrap { max-height:55vh; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><div class="eyebrow">Import · Read · Show · Export</div><h1>Huawei Dump<br>Viewer</h1></div>
+      <div class="privacy">Pemrosesan berjalan lokal di browser. File dump Anda tidak diunggah ke GitHub atau server lain.</div>
+    </header>
+    <section class="workspace">
+      <aside class="panel controls">
+        <label class="dropzone" id="dropzone" for="file-input">
+          <strong>Pilih file Excel</strong>
+          <span>atau tarik file .xlsx / .xlsm ke sini</span>
+          <input id="file-input" type="file" accept=".xlsx,.xlsm">
+        </label>
+        <div id="file-name" class="status">Belum ada file dipilih.</div>
+        <label for="sheet-select">Sheet</label>
+        <select id="sheet-select" disabled></select>
+        <label for="site-input">Site ID</label>
+        <input id="site-input" type="text" placeholder="Contoh: JAW-JB-CBI-0794" disabled>
+        <button id="search-button" disabled>Cari data</button>
+        <button id="clear-button" class="secondary" disabled>Bersihkan hasil</button>
+        <button id="export-button" class="secondary" disabled>Export XLSX</button>
+        <div id="status" class="status">Unggah workbook untuk mulai.</div>
+      </aside>
+      <section class="panel results">
+        <div class="results-head"><h2>Hasil pencarian</h2><div id="count" class="count">0 baris</div></div>
+        <div id="table-wrap" class="table-wrap"><div class="empty">Data hasil pencarian akan muncul di sini.</div></div>
+      </section>
+    </section>
+  </main>
+<script>
+  const state = { workbook: null, headers: [], rows: [], sheet: "" };
+  const fileInput = document.querySelector("#file-input");
+  const dropzone = document.querySelector("#dropzone");
+  const sheetSelect = document.querySelector("#sheet-select");
+  const siteInput = document.querySelector("#site-input");
+  const searchButton = document.querySelector("#search-button");
+  const clearButton = document.querySelector("#clear-button");
+  const exportButton = document.querySelector("#export-button");
+  const fileName = document.querySelector("#file-name");
+  const status = document.querySelector("#status");
+  const count = document.querySelector("#count");
+  const tableWrap = document.querySelector("#table-wrap");
+
+  function siteTokens(value) {
+    return [...String(value ?? "").matchAll(/#([^#]+)#/g)].map(match => match[1].trim().toLowerCase());
+  }
+
+  function setEnabled(enabled) {
+    sheetSelect.disabled = !enabled;
+    siteInput.disabled = !enabled;
+    searchButton.disabled = !enabled;
+    clearButton.disabled = !enabled;
+  }
+
+  async function loadFile(file) {
+    if (!file) return;
+    try {
+      state.workbook = XLSX.read(await file.arrayBuffer(), { type:"array", cellDates:true });
+      sheetSelect.replaceChildren(...state.workbook.SheetNames.map(name => new Option(name, name)));
+      const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => state.workbook.SheetNames.includes(name));
+      sheetSelect.value = preferred || state.workbook.SheetNames[0];
+      state.sheet = sheetSelect.value;
+      fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+      setEnabled(true);
+      status.textContent = "Masukkan Site ID lalu tekan Cari.";
+      clearResults();
+    } catch (error) {
+      state.workbook = null;
+      setEnabled(false);
+      status.textContent = `Gagal membaca workbook: ${error.message}`;
+    }
+  }
+
+  function search() {
+    const query = siteInput.value.trim().replace(/^#|#$/g, "").toLowerCase();
+    if (!query || !state.workbook) return;
+    state.sheet = sheetSelect.value;
+    const rows = XLSX.utils.sheet_to_json(state.workbook.Sheets[state.sheet], { header:1, defval:"" });
+    state.headers = (rows.shift() || []).map(value => String(value));
+    state.rows = rows.filter(row => row.some(value => siteTokens(value).some(token => token.includes(query))));
+    renderTable();
+    status.textContent = `${state.rows.length} baris ditemukan di sheet ${state.sheet}.`;
+  }
+
+  function renderTable() {
+    count.textContent = `${state.rows.length} baris`;
+    exportButton.disabled = state.rows.length === 0;
+    if (!state.headers.length) { tableWrap.innerHTML = '<div class="empty">Sheet tidak memiliki header.</div>'; return; }
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    state.headers.forEach(header => { const cell = document.createElement("th"); cell.textContent = header; headRow.append(cell); });
+    thead.append(headRow); table.append(thead);
+    const tbody = document.createElement("tbody");
+    state.rows.forEach(row => { const tr = document.createElement("tr"); state.headers.forEach((_, index) => { const td = document.createElement("td"); td.textContent = row[index] ?? ""; tr.append(td); }); tbody.append(tr); });
+    table.append(tbody); tableWrap.replaceChildren(table);
+  }
+
+  function clearResults() { state.rows = []; state.headers = []; count.textContent = "0 baris"; tableWrap.innerHTML = '<div class="empty">Data hasil pencarian akan muncul di sini.</div>'; exportButton.disabled = true; }
+
+  function exportResults() {
+    if (!state.rows.length) return;
+    const worksheet = XLSX.utils.aoa_to_sheet([state.headers, ...state.rows]);
+    worksheet["!freeze"] = { xSplit:0, ySplit:1 };
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, (state.sheet || "Hasil").slice(0, 31));
+    const safeSite = siteInput.value.trim().replace(/[<>:"/\\|?*]/g, "_") || "tanpa_site_id";
+    XLSX.writeFile(workbook, `${state.sheet || "hasil"}_${safeSite}.xlsx`);
+  }
+
+  fileInput.addEventListener("change", event => loadFile(event.target.files[0]));
+  ["dragenter", "dragover"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.remove("drag"); }));
+  dropzone.addEventListener("drop", event => loadFile(event.dataTransfer.files[0]));
+  searchButton.addEventListener("click", search);
+  siteInput.addEventListener("keydown", event => { if (event.key === "Enter") search(); });
+  sheetSelect.addEventListener("change", search);
+  clearButton.addEventListener("click", () => { siteInput.value = ""; clearResults(); status.textContent = "Hasil dibersihkan."; });
+  exportButton.addEventListener("click", exportResults);
+</script>
+</body>
+</html>

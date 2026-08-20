@@ -2,6 +2,10 @@
 
 Aplikasi desktop sederhana untuk mencari Site ID pada workbook dump Huawei dan mengekspor hasilnya ke XLSX.
 
+## Versi Web
+
+Buka [Huawei Dump Viewer](https://husnitmrn-dev.github.io/READ-DUMP-HUAWEI/), pilih workbook dump, pilih sheet, lalu cari Site ID. Workbook diproses langsung di browser dan tidak diunggah ke server.
+
 ## Instalasi
 
 Gunakan Python 3.10 atau yang lebih baru.
