@@ -72,7 +72,7 @@
     </section>
   </main>
 <script>
-  const state = { workbook: null, headers: [], rows: [], sheet: "" };
+  const state = { worker: null, workbookReady: false, headers: [], rows: [], sheet: "" };
   const fileInput = document.querySelector("#file-input");
   const dropzone = document.querySelector("#dropzone");
   const sheetSelect = document.querySelector("#sheet-select");
@@ -84,6 +84,57 @@
   const status = document.querySelector("#status");
   const count = document.querySelector("#count");
   const tableWrap = document.querySelector("#table-wrap");
+
+  const workerSource = `
+    importScripts("https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js");
+    let workbook;
+    const tokens = value => [...String(value ?? "").matchAll(/#([^#]+)#/g)].map(match => match[1].trim().toLowerCase());
+    self.onmessage = event => {
+      try {
+        if (event.data.type === "load") {
+          workbook = XLSX.read(event.data.buffer, { type:"array", cellDates:true });
+          self.postMessage({ type:"ready", sheets: workbook.SheetNames });
+        }
+        if (event.data.type === "search") {
+          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[event.data.sheet], { header:1, defval:"" });
+          const headers = (rows.shift() || []).map(value => String(value));
+          const matches = rows.filter(row => row.some(value => tokens(value).some(token => token.includes(event.data.query))));
+          self.postMessage({ type:"results", sheet:event.data.sheet, headers, rows:matches });
+        }
+      } catch (error) {
+        self.postMessage({ type:"error", message:error.message });
+      }
+    };
+  `;
+
+  function createWorker() {
+    if (state.worker) state.worker.terminate();
+    state.worker = new Worker(URL.createObjectURL(new Blob([workerSource], { type:"text/javascript" })));
+    state.worker.onmessage = event => {
+      if (event.data.type === "ready") {
+        sheetSelect.replaceChildren(...event.data.sheets.map(name => new Option(name, name)));
+        const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => event.data.sheets.includes(name));
+        sheetSelect.value = preferred || event.data.sheets[0];
+        state.sheet = sheetSelect.value;
+        state.workbookReady = true;
+        setEnabled(true);
+        status.textContent = "Masukkan Site ID lalu tekan Cari.";
+        clearResults();
+      }
+      if (event.data.type === "results") {
+        state.sheet = event.data.sheet;
+        state.headers = event.data.headers;
+        state.rows = event.data.rows;
+        renderTable();
+        status.textContent = `${state.rows.length} baris ditemukan di sheet ${state.sheet}.`;
+      }
+      if (event.data.type === "error") {
+        status.textContent = `Gagal memproses workbook: ${event.data.message}`;
+        setEnabled(false);
+      }
+    };
+    return state.worker;
+  }
 
   function siteTokens(value) {
     return [...String(value ?? "").matchAll(/#([^#]+)#/g)].map(match => match[1].trim().toLowerCase());
@@ -98,32 +149,21 @@
 
   async function loadFile(file) {
     if (!file) return;
-    try {
-      state.workbook = XLSX.read(await file.arrayBuffer(), { type:"array", cellDates:true });
-      sheetSelect.replaceChildren(...state.workbook.SheetNames.map(name => new Option(name, name)));
-      const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => state.workbook.SheetNames.includes(name));
-      sheetSelect.value = preferred || state.workbook.SheetNames[0];
-      state.sheet = sheetSelect.value;
-      fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
-      setEnabled(true);
-      status.textContent = "Masukkan Site ID lalu tekan Cari.";
-      clearResults();
-    } catch (error) {
-      state.workbook = null;
-      setEnabled(false);
-      status.textContent = `Gagal membaca workbook: ${error.message}`;
-    }
+    state.workbookReady = false;
+    setEnabled(false);
+    clearResults();
+    fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+    status.textContent = "Membaca workbook di worker... halaman tetap dapat digunakan.";
+    const buffer = await file.arrayBuffer();
+    createWorker().postMessage({ type:"load", buffer }, [buffer]);
   }
 
   function search() {
     const query = siteInput.value.trim().replace(/^#|#$/g, "").toLowerCase();
-    if (!query || !state.workbook) return;
+    if (!query || !state.workbookReady) return;
     state.sheet = sheetSelect.value;
-    const rows = XLSX.utils.sheet_to_json(state.workbook.Sheets[state.sheet], { header:1, defval:"" });
-    state.headers = (rows.shift() || []).map(value => String(value));
-    state.rows = rows.filter(row => row.some(value => siteTokens(value).some(token => token.includes(query))));
-    renderTable();
-    status.textContent = `${state.rows.length} baris ditemukan di sheet ${state.sheet}.`;
+    status.textContent = "Mencari data...";
+    state.worker.postMessage({ type:"search", sheet:state.sheet, query });
   }
 
   function renderTable() {
