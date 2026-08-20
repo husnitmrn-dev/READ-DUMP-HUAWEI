@@ -16,17 +16,26 @@
     .privacy { max-width:300px; padding:14px 16px; border-left:4px solid var(--orange); color:var(--muted); font:14px/1.45 system-ui,sans-serif; }
     .workspace { display:grid; grid-template-columns:minmax(270px,330px) 1fr; gap:18px; align-items:start; }
     .panel { background:rgba(255,253,247,.88); border:1px solid var(--line); box-shadow:0 12px 32px rgba(23,34,29,.06); }
-    .controls { padding:20px; }
-    .dropzone { display:block; border:1.5px dashed var(--green); background:#edf5df; padding:22px 16px; text-align:center; cursor:pointer; transition:.2s; }
+    .controls { padding:22px; position:relative; overflow:hidden; }
+    .controls::before { content:""; position:absolute; top:0; left:0; right:0; height:5px; background:var(--orange); }
+    .form-intro { margin:0 0 18px; }
+    .form-intro h2 { margin:0 0 5px; font-size:27px; font-weight:500; }
+    .form-intro p { margin:0; color:var(--muted); font:13px/1.45 system-ui,sans-serif; }
+    .dropzone { display:block; border:1.5px dashed var(--green); background:#edf5df; padding:24px 16px; text-align:center; cursor:pointer; transition:.2s; }
     .dropzone:hover,.dropzone.drag { background:var(--lime); }
     .dropzone strong { display:block; font-size:20px; font-weight:500; }
     .dropzone span { display:block; margin-top:7px; color:var(--muted); font:13px/1.4 system-ui,sans-serif; }
     input[type=file] { display:none; }
     label { display:block; margin:20px 0 7px; color:var(--muted); font:700 11px system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+    .site-label { margin-top:24px; }
     select,input[type=text],button { width:100%; min-height:44px; border:1px solid var(--line); background:white; color:var(--ink); padding:10px 12px; font:15px system-ui,sans-serif; }
-    button { border:0; background:var(--green); color:white; cursor:pointer; font-weight:700; }
+    button { border:0; background:var(--green); color:white; cursor:pointer; font-weight:700; transition:background .2s, transform .2s; }
+    button:not(:disabled):hover { transform:translateY(-1px); }
     button:hover { background:#0e5039; }
     button.secondary { margin-top:9px; background:transparent; color:var(--green); border:1px solid var(--green); }
+    .action-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:9px; }
+    .action-row button { margin-top:0; }
+    .hint { margin:8px 0 0; color:var(--muted); font:12px/1.4 system-ui,sans-serif; }
     button:disabled,select:disabled,input:disabled { opacity:.48; cursor:not-allowed; }
     .status { margin-top:18px; color:var(--muted); font:13px/1.45 system-ui,sans-serif; }
     .results { min-width:0; }
@@ -50,6 +59,7 @@
     </header>
     <section class="workspace">
       <aside class="panel controls">
+        <div class="form-intro"><h2>Mulai pencarian</h2><p>Temukan data RET berdasarkan Site ID.</p></div>
         <label class="dropzone" id="dropzone" for="file-input">
           <strong>Pilih file Excel</strong>
           <span>atau tarik file .xlsx / .xlsm ke sini</span>
@@ -58,11 +68,14 @@
         <div id="file-name" class="status">Belum ada file dipilih.</div>
         <label for="sheet-select">Sheet</label>
         <select id="sheet-select" disabled></select>
-        <label for="site-input">Site ID</label>
+        <label class="site-label" for="site-input">Site ID</label>
         <input id="site-input" type="text" placeholder="Contoh: JAW-JB-CBI-0794" disabled>
+        <p class="hint">Gunakan Site ID tanpa tanda pagar, misalnya JAW-JB-CBI-0794.</p>
         <button id="search-button" disabled>Cari data</button>
-        <button id="clear-button" class="secondary" disabled>Bersihkan hasil</button>
-        <button id="export-button" class="secondary" disabled>Export XLSX</button>
+        <div class="action-row">
+          <button id="clear-button" class="secondary" disabled>Bersihkan</button>
+          <button id="export-button" class="secondary" disabled>Export XLSX</button>
+        </div>
         <div id="status" class="status">Unggah workbook untuk mulai.</div>
       </aside>
       <section class="panel results">
