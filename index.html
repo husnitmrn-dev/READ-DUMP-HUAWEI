@@ -73,7 +73,7 @@
   </main>
 <script>
   const knownSheets = ["目录", "异常数据", "成功无数据", "Dsp VSWR Test Result", "List BFANT Configuration", "List PDSCH Configuration", "List Pa parameters for PDSCH po", "Display RET Subunit Dynamic Inf", "List RLC PDCP Parameter Group", "List Cell MLB Configuration", "List Parameters Group of InterF", "Display RET Dynamic Information", "Display RET Device Data Dynamic", "LST ALMAF", "Display static parameters of ce", "List Cell Algorithm Switch Conf", "Display Cell UEs Access Statist", "Display Physical Topology of Ce"];
-  const state = { worker: null, workbookReady: false, headers: [], rows: [], sheet: "" };
+  const state = { worker: null, workbookReady: false, pendingSearch: false, headers: [], rows: [], sheet: "" };
   const fileInput = document.querySelector("#file-input");
   const dropzone = document.querySelector("#dropzone");
   const sheetSelect = document.querySelector("#sheet-select");
@@ -120,6 +120,8 @@
         sheetSelect.value = preferred || event.data.sheets[0];
         state.sheet = sheetSelect.value;
         sheetSelect.disabled = false;
+        siteInput.disabled = false;
+        searchButton.disabled = false;
         status.textContent = `${event.data.sheets.length} sheet ditemukan. Menyiapkan data...`;
       }
       if (event.data.type === "ready") {
@@ -128,6 +130,7 @@
         setEnabled(true);
         status.textContent = "Masukkan Site ID lalu tekan Cari.";
         clearResults();
+        if (state.pendingSearch) search();
       }
       if (event.data.type === "results") {
         state.sheet = event.data.sheet;
@@ -164,6 +167,8 @@
     sheetSelect.replaceChildren(...knownSheets.map(name => new Option(name, name)));
     sheetSelect.value = preferred || knownSheets[0];
     sheetSelect.disabled = false;
+    siteInput.disabled = false;
+    searchButton.disabled = false;
     state.sheet = sheetSelect.value;
     fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
     status.textContent = "Daftar sheet siap. Menyiapkan data untuk pencarian...";
@@ -173,7 +178,13 @@
 
   function search() {
     const query = siteInput.value.trim().replace(/^#|#$/g, "").toLowerCase();
-    if (!query || !state.workbookReady) return;
+    if (!query) return;
+    if (!state.workbookReady) {
+      state.pendingSearch = true;
+      status.textContent = "Site ID disimpan. Pencarian dimulai setelah data siap.";
+      return;
+    }
+    state.pendingSearch = false;
     state.sheet = sheetSelect.value;
     status.textContent = "Mencari data...";
     state.worker.postMessage({ type:"search", sheet:state.sheet, query });
