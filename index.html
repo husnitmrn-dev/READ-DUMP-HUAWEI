@@ -89,7 +89,11 @@
   const workerSource = `
     importScripts("https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js");
     let workbook;
-    const tokens = value => [...String(value ?? "").matchAll(/#([^#]+)#/g)].map(match => match[1].trim().toLowerCase());
+    const matchesQuery = (value, query) => {
+      const text = String(value ?? "").toLowerCase();
+      const tokens = [...text.matchAll(/#([^#]+)#/g)].map(match => match[1].trim());
+      return tokens.some(token => token.includes(query)) || text.includes(query);
+    };
     self.onmessage = event => {
       try {
         if (event.data.type === "load") {
@@ -101,7 +105,7 @@
         if (event.data.type === "search") {
           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[event.data.sheet], { header:1, defval:"" });
           const headers = (rows.shift() || []).map(value => String(value));
-          const matches = rows.filter(row => row.some(value => tokens(value).some(token => token.includes(event.data.query))));
+          const matches = rows.filter(row => row.some(value => matchesQuery(value, event.data.query)));
           self.postMessage({ type:"results", sheet:event.data.sheet, headers, rows:matches });
         }
       } catch (error) {
