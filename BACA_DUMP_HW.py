@@ -41,6 +41,22 @@ class DumpViewer(tk.Tk):
 		self.title("Huawei Dump Viewer Import and Export XLSX")
 		self.geometry("1200x650")
 		self.minsize(800, 450)
+		self.configure(bg="#f4f1e8")
+		style = ttk.Style(self)
+		try:
+			style.theme_use("clam")
+		except tk.TclError:
+			pass
+		style.configure("App.TFrame", background="#f4f1e8")
+		style.configure("Panel.TFrame", background="#fffdf7")
+		style.configure("Title.TLabel", background="#fffdf7", foreground="#17221d", font=("Georgia", 20))
+		style.configure("Subtitle.TLabel", background="#fffdf7", foreground="#64726a", font=("Segoe UI", 9))
+		style.configure("Section.TLabel", background="#fffdf7", foreground="#176b4d", font=("Segoe UI", 9, "bold"))
+		style.configure("Status.TLabel", background="#f4f1e8", foreground="#64726a", font=("Segoe UI", 9))
+		style.configure("Accent.TButton", background="#176b4d", foreground="#ffffff", padding=(12, 8), font=("Segoe UI", 9, "bold"))
+		style.map("Accent.TButton", background=[("active", "#0e5039")])
+		style.configure("Treeview", rowheight=27, background="#fffdf7", fieldbackground="#fffdf7", font=("Segoe UI", 9))
+		style.configure("Treeview.Heading", background="#e8efdb", foreground="#176b4d", font=("Segoe UI", 9, "bold"))
 		self.workbook_path = workbook_path
 		self.workbook = None
 		self.headers = []
@@ -50,39 +66,39 @@ class DumpViewer(tk.Tk):
 		self._load_workbook()
 
 	def _build_widgets(self):
-		controls = ttk.Frame(self, padding=10)
+		controls = ttk.Frame(self, padding=(18, 16, 18, 10), style="App.TFrame")
 		controls.pack(fill="x")
-		ttk.Button(controls, text="Import File", command=self.import_workbook).pack(
-			side="left", padx=(0, 16)
-		)
-		ttk.Button(controls, text="Export XLSX", command=self.export_xlsx).pack(
-			side="left", padx=(0, 16)
-		)
+		panel = ttk.Frame(controls, padding=(16, 14), style="Panel.TFrame")
+		panel.pack(fill="x")
+		ttk.Label(panel, text="Mulai pencarian", style="Title.TLabel").grid(row=0, column=0, columnspan=8, sticky="w")
+		tk.Label(panel, text="Import workbook, pilih sheet, lalu temukan data berdasarkan Site ID.", style="Subtitle.TLabel").grid(row=1, column=0, columnspan=8, sticky="w", pady=(2, 14))
+		tk.Button(panel, text="Import File", command=self.import_workbook, style="Accent.TButton").grid(row=2, column=0, padx=(0, 8), sticky="ew")
+		ttk.Button(panel, text="Export XLSX", command=self.export_xlsx).grid(row=2, column=1, padx=(0, 16), sticky="ew")
 
-		ttk.Label(controls, text="Sheet:").pack(side="left")
+		tk.Label(panel, text="SHEET", style="Section.TLabel").grid(row=2, column=2, padx=(0, 6), sticky="e")
 		self.sheet_name = tk.StringVar()
 		self.sheet_box = ttk.Combobox(
-			controls, textvariable=self.sheet_name, state="readonly", width=38
+			panel, textvariable=self.sheet_name, state="readonly", width=32
 		)
-		self.sheet_box.pack(side="left", padx=(6, 18))
+		self.sheet_box.grid(row=2, column=3, padx=(0, 16), sticky="ew")
 		self.sheet_box.bind("<<ComboboxSelected>>", lambda _event: self.search())
 
-		ttk.Label(controls, text="Site ID:").pack(side="left")
+		tk.Label(panel, text="SITE ID", style="Section.TLabel").grid(row=2, column=4, padx=(0, 6), sticky="e")
 		self.site_id = tk.StringVar()
-		self.search_box = ttk.Entry(controls, textvariable=self.site_id, width=30)
-		self.search_box.pack(side="left", padx=6)
+		self.search_box = ttk.Entry(panel, textvariable=self.site_id, width=24)
+		self.search_box.grid(row=2, column=5, padx=(0, 6), sticky="ew")
 		self.search_box.bind("<Return>", lambda _event: self.search())
-		ttk.Button(controls, text="Cari", command=self.search).pack(side="left")
-		ttk.Button(controls, text="Bersihkan", command=self.clear_results).pack(
-			side="left", padx=6
-		)
+		ttk.Button(panel, text="Cari data", command=self.search, style="Accent.TButton").grid(row=2, column=6, padx=(0, 6), sticky="ew")
+		ttk.Button(panel, text="Bersihkan", command=self.clear_results).grid(row=2, column=7, sticky="ew")
+		for column in (3, 5):
+			panel.columnconfigure(column, weight=1)
 
 		self.status = tk.StringVar(value="Memuat workbook...")
-		ttk.Label(self, textvariable=self.status, padding=(10, 0, 10, 6)).pack(
+		ttk.Label(self, textvariable=self.status, padding=(18, 6, 18, 10), style="Status.TLabel").pack(
 			anchor="w"
 		)
 
-		table_frame = ttk.Frame(self, padding=(10, 0, 10, 10))
+		table_frame = ttk.Frame(self, padding=(18, 0, 18, 16), style="App.TFrame")
 		table_frame.pack(fill="both", expand=True)
 		self.table = ttk.Treeview(table_frame, show="headings")
 		y_scroll = ttk.Scrollbar(table_frame, orient="vertical", command=self.table.yview)
