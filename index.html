@@ -112,16 +112,9 @@
     state.worker = new Worker(URL.createObjectURL(new Blob([workerSource], { type:"text/javascript" })));
     state.worker.onmessage = event => {
       if (event.data.type === "ready") {
-        const displaySheet = "Display RET Subunit Dynamic Inf";
-        const availableSheets = event.data.sheets.filter(name => name === displaySheet);
-        sheetSelect.replaceChildren(...availableSheets.map(name => new Option(name, name)));
-        if (!availableSheets.length) {
-          state.workbookReady = false;
-          setEnabled(false);
-          status.textContent = `Sheet ${displaySheet} tidak ditemukan di workbook.`;
-          return;
-        }
-        sheetSelect.value = displaySheet;
+        const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => event.data.sheets.includes(name));
+        sheetSelect.replaceChildren(...event.data.sheets.map(name => new Option(name, name)));
+        sheetSelect.value = preferred || event.data.sheets[0];
         state.sheet = sheetSelect.value;
         state.workbookReady = true;
         setEnabled(true);
