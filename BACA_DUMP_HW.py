@@ -71,11 +71,11 @@ class DumpViewer(tk.Tk):
 		panel = ttk.Frame(controls, padding=(16, 14), style="Panel.TFrame")
 		panel.pack(fill="x")
 		ttk.Label(panel, text="Mulai pencarian", style="Title.TLabel").grid(row=0, column=0, columnspan=8, sticky="w")
-		tk.Label(panel, text="Import workbook, pilih sheet, lalu temukan data berdasarkan Site ID.", style="Subtitle.TLabel").grid(row=1, column=0, columnspan=8, sticky="w", pady=(2, 14))
-		tk.Button(panel, text="Import File", command=self.import_workbook, style="Accent.TButton").grid(row=2, column=0, padx=(0, 8), sticky="ew")
+		ttk.Label(panel, text="Import workbook, pilih sheet, lalu temukan data berdasarkan Site ID.", style="Subtitle.TLabel").grid(row=1, column=0, columnspan=8, sticky="w", pady=(2, 14))
+		ttk.Button(panel, text="Import File", command=self.import_workbook, style="Accent.TButton").grid(row=2, column=0, padx=(0, 8), sticky="ew")
 		ttk.Button(panel, text="Export XLSX", command=self.export_xlsx).grid(row=2, column=1, padx=(0, 16), sticky="ew")
 
-		tk.Label(panel, text="SHEET", style="Section.TLabel").grid(row=2, column=2, padx=(0, 6), sticky="e")
+		ttk.Label(panel, text="SHEET", style="Section.TLabel").grid(row=2, column=2, padx=(0, 6), sticky="e")
 		self.sheet_name = tk.StringVar()
 		self.sheet_box = ttk.Combobox(
 			panel, textvariable=self.sheet_name, state="readonly", width=32
@@ -83,7 +83,7 @@ class DumpViewer(tk.Tk):
 		self.sheet_box.grid(row=2, column=3, padx=(0, 16), sticky="ew")
 		self.sheet_box.bind("<<ComboboxSelected>>", lambda _event: self.search())
 
-		tk.Label(panel, text="SITE ID", style="Section.TLabel").grid(row=2, column=4, padx=(0, 6), sticky="e")
+		ttk.Label(panel, text="SITE ID", style="Section.TLabel").grid(row=2, column=4, padx=(0, 6), sticky="e")
 		self.site_id = tk.StringVar()
 		self.search_box = ttk.Entry(panel, textvariable=self.site_id, width=24)
 		self.search_box.grid(row=2, column=5, padx=(0, 6), sticky="ew")
