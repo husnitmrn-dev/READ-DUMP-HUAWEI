@@ -69,8 +69,8 @@
         <label for="sheet-select">Sheet</label>
         <select id="sheet-select" disabled></select>
         <label class="site-label" for="site-input">Site ID</label>
-        <input id="site-input" type="text" placeholder="Contoh: JAW-JB-CBI-0794" disabled>
-        <p class="hint">Gunakan Site ID tanpa tanda pagar, misalnya JAW-JB-CBI-0794.</p>
+        <input id="site-input" type="text" placeholder="Contoh: JAW-JB-CBI-0794, JAW-JB-CBI-0795" disabled>
+        <p class="hint">Pisahkan beberapa Site ID dengan koma.</p>
         <button id="search-button" disabled>Cari data</button>
         <div class="action-row">
           <button id="clear-button" class="secondary" disabled>Bersihkan</button>
@@ -118,7 +118,7 @@
         if (event.data.type === "search") {
           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[event.data.sheet], { header:1, defval:"" });
           const headers = (rows.shift() || []).map(value => String(value));
-          const matches = rows.filter(row => row.some(value => matchesQuery(value, event.data.query)));
+          const matches = rows.filter(row => row.some(value => event.data.queries.some(query => matchesQuery(value, query))));
           self.postMessage({ type:"results", sheet:event.data.sheet, headers, rows:matches });
         }
       } catch (error) {
@@ -194,8 +194,10 @@
   }
 
   function search() {
-    const query = siteInput.value.trim().replace(/^#|#$/g, "").toLowerCase();
-    if (!query) return;
+    const queries = siteInput.value.split(",")
+      .map(query => query.trim().replace(/^#|#$/g, "").toLowerCase())
+      .filter(Boolean);
+    if (!queries.length) return;
     if (!state.workbookReady) {
       state.pendingSearch = true;
       status.textContent = "Site ID disimpan. Pencarian dimulai setelah data siap.";
@@ -204,7 +206,7 @@
     state.pendingSearch = false;
     state.sheet = sheetSelect.value;
     status.textContent = "Mencari data...";
-    state.worker.postMessage({ type:"search", sheet:state.sheet, query });
+    state.worker.postMessage({ type:"search", sheet:state.sheet, queries });
   }
 
   function renderTable() {
