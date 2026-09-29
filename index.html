@@ -4,246 +4,1924 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Huawei Dump Viewer</title>
+
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
   <style>
-    :root { --ink:#17221d; --muted:#64726a; --paper:#f4f1e8; --panel:#fffdf7; --line:#d8d9ca; --green:#176b4d; --lime:#c8e86b; --orange:#ef8b43; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:radial-gradient(circle at 10% 0%,#e4edcf 0 18%,transparent 42%),var(--paper); font-family:Georgia,"Times New Roman",serif; }
-    .shell { max-width:1400px; margin:auto; padding:34px 24px 48px; }
-    header { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:28px; }
-    .eyebrow { color:var(--green); font:700 12px/1.2 system-ui,sans-serif; letter-spacing:.16em; text-transform:uppercase; }
-    h1 { margin:7px 0 0; font-size:clamp(36px,6vw,72px); line-height:.95; font-weight:500; letter-spacing:0; }
-    .privacy { max-width:300px; padding:14px 16px; border-left:4px solid var(--orange); color:var(--muted); font:14px/1.45 system-ui,sans-serif; }
-    .workspace { display:grid; grid-template-columns:1fr; gap:18px; align-items:start; }
-    .panel { background:rgba(255,253,247,.88); border:1px solid var(--line); box-shadow:0 12px 32px rgba(23,34,29,.06); }
-    .controls { padding:22px; position:relative; overflow:hidden; }
-    .controls::before { content:""; position:absolute; top:0; left:0; right:0; height:5px; background:var(--orange); }
-    .form-intro { margin:0 0 18px; }
-    .form-intro h2 { margin:0 0 5px; font-size:27px; font-weight:500; }
-    .form-intro p { margin:0; color:var(--muted); font:13px/1.45 system-ui,sans-serif; }
-    .dropzone { display:block; border:1.5px dashed var(--green); background:#edf5df; padding:24px 16px; text-align:center; cursor:pointer; transition:.2s; }
-    .dropzone:hover,.dropzone.drag { background:var(--lime); }
-    .dropzone strong { display:block; font-size:20px; font-weight:500; }
-    .dropzone span { display:block; margin-top:7px; color:var(--muted); font:13px/1.4 system-ui,sans-serif; }
-    input[type=file] { display:none; }
-    label { display:block; margin:20px 0 7px; color:var(--muted); font:700 11px system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
-    .site-label { margin-top:24px; }
-    select,input[type=text],button { width:100%; min-height:44px; border:1px solid var(--line); background:white; color:var(--ink); padding:10px 12px; font:15px system-ui,sans-serif; }
-    button { border:0; background:var(--green); color:white; cursor:pointer; font-weight:700; transition:background .2s, transform .2s; }
-    button:not(:disabled):hover { transform:translateY(-1px); }
-    button:hover { background:#0e5039; }
-    button.secondary { margin-top:9px; background:transparent; color:var(--green); border:1px solid var(--green); }
-    .action-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:9px; }
-    .action-row button { margin-top:0; }
-    .hint { margin:8px 0 0; color:var(--muted); font:12px/1.4 system-ui,sans-serif; }
-    button:disabled,select:disabled,input:disabled { opacity:.48; cursor:not-allowed; }
-    .status { margin-top:18px; color:var(--muted); font:13px/1.45 system-ui,sans-serif; }
-    .results { min-width:0; }
-    .results-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px 20px; border-bottom:1px solid var(--line); }
-    .results-head h2 { margin:0; font-size:24px; font-weight:500; }
-    .count { color:var(--green); font:700 13px system-ui,sans-serif; }
-    .table-wrap { overflow:auto; max-height:66vh; }
-    table { width:100%; border-collapse:collapse; font:13px/1.35 system-ui,sans-serif; white-space:nowrap; }
-    th { position:sticky; top:0; background:#e8efdb; color:var(--green); text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
-    th,td { padding:11px 13px; border-bottom:1px solid #e6e6da; }
-    tbody tr:hover { background:#faf8ec; }
-    .empty { padding:56px 24px; text-align:center; color:var(--muted); font-size:18px; }
-    @media (max-width:760px) { .shell { padding:22px 14px 34px; } header { display:block; } .privacy { margin-top:18px; max-width:none; } .workspace { grid-template-columns:1fr; } .table-wrap { max-height:55vh; } }
+    :root {
+      --ink:#17221d;
+      --muted:#64726a;
+      --paper:#f4f1e8;
+      --panel:#fffdf7;
+      --line:#d8d9ca;
+      --green:#176b4d;
+      --lime:#c8e86b;
+      --orange:#ef8b43;
+    }
+
+    * {
+      box-sizing:border-box;
+    }
+
+    body {
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(
+          circle at 10% 0%,
+          #e4edcf 0 18%,
+          transparent 42%
+        ),
+        var(--paper);
+      font-family:Georgia,"Times New Roman",serif;
+    }
+
+    .shell {
+      max-width:1400px;
+      margin:auto;
+      padding:34px 24px 48px;
+    }
+
+    header {
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:24px;
+      margin-bottom:28px;
+    }
+
+    .eyebrow {
+      color:var(--green);
+      font:700 12px/1.2 system-ui,sans-serif;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    h1 {
+      margin:7px 0 0;
+      font-size:clamp(36px,6vw,72px);
+      line-height:.95;
+      font-weight:500;
+      letter-spacing:0;
+    }
+
+    .privacy {
+      max-width:300px;
+      padding:14px 16px;
+      border-left:4px solid var(--orange);
+      color:var(--muted);
+      font:14px/1.45 system-ui,sans-serif;
+    }
+
+    .workspace {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .panel {
+      background:rgba(255,253,247,.88);
+      border:1px solid var(--line);
+      box-shadow:0 12px 32px rgba(23,34,29,.06);
+    }
+
+    .controls {
+      padding:22px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .controls::before {
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:5px;
+      background:var(--orange);
+    }
+
+    .form-intro {
+      margin:0 0 18px;
+    }
+
+    .form-intro h2 {
+      margin:0 0 5px;
+      font-size:27px;
+      font-weight:500;
+    }
+
+    .form-intro p {
+      margin:0;
+      color:var(--muted);
+      font:13px/1.45 system-ui,sans-serif;
+    }
+
+    .dropzone {
+      display:block;
+      border:1.5px dashed var(--green);
+      background:#edf5df;
+      padding:24px 16px;
+      text-align:center;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .dropzone:hover,
+    .dropzone.drag {
+      background:var(--lime);
+    }
+
+    .dropzone strong {
+      display:block;
+      font-size:20px;
+      font-weight:500;
+    }
+
+    .dropzone span {
+      display:block;
+      margin-top:7px;
+      color:var(--muted);
+      font:13px/1.4 system-ui,sans-serif;
+    }
+
+    input[type=file] {
+      display:none;
+    }
+
+    label {
+      display:block;
+      margin:20px 0 7px;
+      color:var(--muted);
+      font:700 11px system-ui,sans-serif;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
+
+    .site-label {
+      margin-top:24px;
+    }
+
+    select,
+    input[type=text],
+    button {
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      background:white;
+      color:var(--ink);
+      padding:10px 12px;
+      font:15px system-ui,sans-serif;
+    }
+
+    button {
+      border:0;
+      background:var(--green);
+      color:white;
+      cursor:pointer;
+      font-weight:700;
+      transition:background .2s, transform .2s;
+    }
+
+    button:not(:disabled):hover {
+      transform:translateY(-1px);
+    }
+
+    button:hover {
+      background:#0e5039;
+    }
+
+    button.secondary {
+      margin-top:9px;
+      background:transparent;
+      color:var(--green);
+      border:1px solid var(--green);
+    }
+
+    .action-row {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+      margin-top:9px;
+    }
+
+    .action-row button {
+      margin-top:0;
+    }
+
+    .hint {
+      margin:8px 0 0;
+      color:var(--muted);
+      font:12px/1.4 system-ui,sans-serif;
+    }
+
+    button:disabled,
+    select:disabled,
+    input:disabled {
+      opacity:.48;
+      cursor:not-allowed;
+    }
+
+    .status {
+      margin-top:18px;
+      color:var(--muted);
+      font:13px/1.45 system-ui,sans-serif;
+    }
+
+    /* SHEET LIST */
+
+    .sheet-actions {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-bottom:8px;
+    }
+
+    .sheet-actions button {
+      margin-top:0;
+      font-size:12px;
+      min-height:38px;
+    }
+
+    .sheet-list {
+      max-height:300px;
+      overflow:auto;
+      border:1px solid var(--line);
+      background:white;
+      padding:8px;
+    }
+
+    .sheet-item {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px;
+      margin:0;
+      color:var(--ink);
+      font:13px/1.3 system-ui,sans-serif;
+      letter-spacing:0;
+      text-transform:none;
+      cursor:pointer;
+    }
+
+    .sheet-item:hover {
+      background:#f4f7ed;
+    }
+
+    .sheet-item input {
+      width:auto;
+      min-height:auto;
+      margin:0;
+      cursor:pointer;
+    }
+
+    .sheet-item span {
+      word-break:break-word;
+    }
+
+    /* RESULTS */
+
+    .results {
+      min-width:0;
+    }
+
+    .results-head {
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:center;
+      padding:18px 20px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .results-head h2 {
+      margin:0;
+      font-size:24px;
+      font-weight:500;
+    }
+
+    .count {
+      color:var(--green);
+      font:700 13px system-ui,sans-serif;
+    }
+
+    .table-wrap {
+      overflow:auto;
+      max-height:66vh;
+    }
+
+    .result-section {
+      margin-bottom:28px;
+    }
+
+    .result-title {
+      padding:14px 18px;
+      margin:0;
+      background:#e8efdb;
+      color:var(--green);
+      font:700 14px system-ui,sans-serif;
+      border-bottom:1px solid var(--line);
+      position:sticky;
+      left:0;
+    }
+
+    .result-table-wrap {
+      overflow:auto;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font:13px/1.35 system-ui,sans-serif;
+      white-space:nowrap;
+    }
+
+    th {
+      position:sticky;
+      top:0;
+      background:#e8efdb;
+      color:var(--green);
+      text-align:left;
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      z-index:1;
+    }
+
+    th,
+    td {
+      padding:11px 13px;
+      border-bottom:1px solid #e6e6da;
+    }
+
+    tbody tr:hover {
+      background:#faf8ec;
+    }
+
+    .empty {
+      padding:56px 24px;
+      text-align:center;
+      color:var(--muted);
+      font-size:18px;
+    }
+
+    @media (max-width:760px) {
+
+      .shell {
+        padding:22px 14px 34px;
+      }
+
+      header {
+        display:block;
+      }
+
+      .privacy {
+        margin-top:18px;
+        max-width:none;
+      }
+
+      .workspace {
+        grid-template-columns:1fr;
+      }
+
+      .table-wrap {
+        max-height:55vh;
+      }
+
+      .action-row {
+        grid-template-columns:1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <main class="shell">
-    <header>
-      <div><div class="eyebrow">Import · Read · Show · Export</div><h1>Check Dump<br>Viewer</h1></div>
-      <div class="privacy">Pemrosesan berjalan lokal di browser. File dump Anda tidak diunggah ke GitHub atau server lain.</div>
-    </header>
-    <section class="workspace">
-      <aside class="panel controls">
-        <div class="form-intro"><h2>Mulai pencarian</h2><p>Temukan data RET berdasarkan Site ID.</p></div>
-        <label class="dropzone" id="dropzone" for="file-input">
-          <strong>Pilih file Excel</strong>
-          <span>atau tarik file .xlsx / .xlsm ke sini</span>
-          <input id="file-input" type="file" accept=".xlsx,.xlsm">
-        </label>
-        <div id="file-name" class="status">Belum ada file dipilih.</div>
-        <label for="sheet-select">Sheet</label>
-        <select id="sheet-select" disabled></select>
-        <label class="site-label" for="site-input">Site ID</label>
-        <input id="site-input" type="text" placeholder="Contoh: JAW-JB-CBI-0794, JAW-JB-CBI-0795" disabled>
-        <p class="hint">Pisahkan beberapa Site ID dengan koma.</p>
-        <button id="search-button" disabled>Cari data</button>
-        <div class="action-row">
-          <button id="clear-button" class="secondary" disabled>Bersihkan</button>
-          <button id="export-button" class="secondary" disabled>Export XLSX</button>
+
+<main class="shell">
+
+  <header>
+
+    <div>
+      <div class="eyebrow">
+        Import · Read · Show · Export
+      </div>
+
+      <h1>
+        Check Dump<br>
+        Viewer
+      </h1>
+    </div>
+
+    <div class="privacy">
+      Pemrosesan berjalan lokal di browser.
+      File dump Anda tidak diunggah ke GitHub
+      atau server lain.
+    </div>
+
+  </header>
+
+
+  <section class="workspace">
+
+    <!-- CONTROL PANEL -->
+
+    <aside class="panel controls">
+
+      <div class="form-intro">
+
+        <h2>Mulai pencarian</h2>
+
+        <p>
+          Temukan data RET berdasarkan Site ID
+          dari beberapa sheet sekaligus.
+        </p>
+
+      </div>
+
+
+      <!-- FILE -->
+
+      <label
+        class="dropzone"
+        id="dropzone"
+        for="file-input"
+      >
+
+        <strong>
+          Pilih file Excel
+        </strong>
+
+        <span>
+          atau tarik file .xlsx / .xlsm ke sini
+        </span>
+
+        <input
+          id="file-input"
+          type="file"
+          accept=".xlsx,.xlsm"
+        >
+
+      </label>
+
+
+      <div
+        id="file-name"
+        class="status"
+      >
+        Belum ada file dipilih.
+      </div>
+
+
+      <!-- SHEET -->
+
+      <label>
+        Sheet
+      </label>
+
+      <div class="sheet-actions">
+
+        <button
+          type="button"
+          id="select-all-sheets"
+          class="secondary"
+        >
+          Pilih Semua
+        </button>
+
+        <button
+          type="button"
+          id="clear-all-sheets"
+          class="secondary"
+        >
+          Hapus Semua
+        </button>
+
+      </div>
+
+
+      <div
+        id="sheet-list"
+        class="sheet-list"
+      >
+        <div class="empty">
+          Belum ada workbook.
         </div>
-        <div id="status" class="status">Unggah workbook untuk mulai.</div>
-      </aside>
-      <section class="panel results">
-        <div class="results-head"><h2>Hasil pencarian</h2><div id="count" class="count">0 baris</div></div>
-        <div id="table-wrap" class="table-wrap"><div class="empty">Data hasil pencarian akan muncul di sini.</div></div>
-      </section>
+      </div>
+
+
+      <!-- SITE ID -->
+
+      <label
+        class="site-label"
+        for="site-input"
+      >
+        Site ID
+      </label>
+
+      <input
+        id="site-input"
+        type="text"
+        placeholder="Contoh: JAW-JB-CBI-0794, JAW-JB-CBI-0795"
+        disabled
+      >
+
+      <p class="hint">
+        Pisahkan beberapa Site ID dengan koma.
+      </p>
+
+
+      <!-- SEARCH -->
+
+      <button
+        id="search-button"
+        disabled
+      >
+        Cari data
+      </button>
+
+
+      <!-- ACTION -->
+
+      <div class="action-row">
+
+        <button
+          id="clear-button"
+          class="secondary"
+          disabled
+        >
+          Bersihkan
+        </button>
+
+        <button
+          id="export-button"
+          class="secondary"
+          disabled
+        >
+          Export XLSX
+        </button>
+
+      </div>
+
+
+      <div
+        id="status"
+        class="status"
+      >
+        Unggah workbook untuk mulai.
+      </div>
+
+    </aside>
+
+
+    <!-- RESULTS -->
+
+    <section class="panel results">
+
+      <div class="results-head">
+
+        <h2>
+          Hasil pencarian
+        </h2>
+
+        <div
+          id="count"
+          class="count"
+        >
+          0 baris
+        </div>
+
+      </div>
+
+
+      <div
+        id="table-wrap"
+        class="table-wrap"
+      >
+
+        <div class="empty">
+          Data hasil pencarian akan muncul di sini.
+        </div>
+
+      </div>
+
     </section>
-  </main>
+
+  </section>
+
+</main>
+
+
 <script>
-  const knownSheets = ["目录", "异常数据", "成功无数据", "Dsp VSWR Test Result", "List BFANT Configuration", "List PDSCH Configuration", "List Pa parameters for PDSCH po", "Display RET Subunit Dynamic Inf", "List RLC PDCP Parameter Group", "List Cell MLB Configuration", "List Parameters Group of InterF", "Display RET Dynamic Information", "Display RET Device Data Dynamic", "LST ALMAF", "Display static parameters of ce", "List Cell Algorithm Switch Conf", "Display Cell UEs Access Statist", "Display Physical Topology of Ce"];
-  const state = { worker: null, workbookReady: false, pendingSearch: false, headers: [], rows: [], sheet: "" };
-  const fileInput = document.querySelector("#file-input");
-  const dropzone = document.querySelector("#dropzone");
-  const sheetSelect = document.querySelector("#sheet-select");
-  const siteInput = document.querySelector("#site-input");
-  const searchButton = document.querySelector("#search-button");
-  const clearButton = document.querySelector("#clear-button");
-  const exportButton = document.querySelector("#export-button");
-  const fileName = document.querySelector("#file-name");
-  const status = document.querySelector("#status");
-  const count = document.querySelector("#count");
-  const tableWrap = document.querySelector("#table-wrap");
+
+  /* =========================================================
+     KONFIGURASI
+  ========================================================= */
+
+  const knownSheets = [
+    "目录",
+    "异常数据",
+    "成功无数据",
+    "Dsp VSWR Test Result",
+    "List BFANT Configuration",
+    "List PDSCH Configuration",
+    "List Pa parameters for PDSCH po",
+    "Display RET Subunit Dynamic Inf",
+    "List RLC PDCP Parameter Group",
+    "List Cell MLB Configuration",
+    "List Parameters Group of InterF",
+    "Display RET Dynamic Information",
+    "Display RET Device Data Dynamic",
+    "LST ALMAF",
+    "Display static parameters of ce",
+    "List Cell Algorithm Switch Conf",
+    "Display Cell UEs Access Statist",
+    "Display Physical Topology of Ce"
+  ];
+
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+
+  const state = {
+
+    worker: null,
+
+    workbookReady: false,
+
+    pendingSearch: false,
+
+    sheets: [],
+
+    results: {}
+
+  };
+
+
+  /* =========================================================
+     ELEMENT
+  ========================================================= */
+
+  const fileInput =
+    document.querySelector("#file-input");
+
+  const dropzone =
+    document.querySelector("#dropzone");
+
+  const sheetList =
+    document.querySelector("#sheet-list");
+
+  const selectAllSheets =
+    document.querySelector("#select-all-sheets");
+
+  const clearAllSheets =
+    document.querySelector("#clear-all-sheets");
+
+  const siteInput =
+    document.querySelector("#site-input");
+
+  const searchButton =
+    document.querySelector("#search-button");
+
+  const clearButton =
+    document.querySelector("#clear-button");
+
+  const exportButton =
+    document.querySelector("#export-button");
+
+  const fileName =
+    document.querySelector("#file-name");
+
+  const status =
+    document.querySelector("#status");
+
+  const count =
+    document.querySelector("#count");
+
+  const tableWrap =
+    document.querySelector("#table-wrap");
+
+
+  /* =========================================================
+     WORKER SOURCE
+  ========================================================= */
 
   const workerSource = `
-    importScripts("https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js");
+
+    importScripts(
+      "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+    );
+
+
     let workbook;
-    const matchesQuery = (value, query) => {
-      const text = String(value ?? "").toLowerCase();
-      const tokens = [...text.matchAll(/#([^#]+)#/g)].map(match => match[1].trim());
-      return tokens.some(token => token.includes(query)) || text.includes(query);
-    };
+
+
+    function matchesQuery(value, query) {
+
+      const text =
+        String(value ?? "").toLowerCase();
+
+      const tokens =
+        [
+          ...text.matchAll(/#([^#]+)#/g)
+        ]
+        .map(match =>
+          match[1].trim()
+        );
+
+      return tokens.some(token =>
+        token.includes(query)
+      )
+      ||
+      text.includes(query);
+
+    }
+
+
     self.onmessage = event => {
+
       try {
+
+        /* ==============================================
+           LOAD WORKBOOK
+        ============================================== */
+
         if (event.data.type === "load") {
-          workbook = XLSX.read(event.data.buffer, { type:"array", bookSheets:true });
-          self.postMessage({ type:"sheets", sheets: workbook.SheetNames });
-          workbook = XLSX.read(event.data.buffer, { type:"array", cellDates:true });
-          self.postMessage({ type:"ready" });
+
+          workbook =
+            XLSX.read(
+              event.data.buffer,
+              {
+                type:"array",
+                bookSheets:true
+              }
+            );
+
+
+          self.postMessage({
+            type:"sheets",
+            sheets:workbook.SheetNames
+          });
+
+
+          workbook =
+            XLSX.read(
+              event.data.buffer,
+              {
+                type:"array",
+                cellDates:true
+              }
+            );
+
+
+          self.postMessage({
+            type:"ready"
+          });
+
         }
+
+
+        /* ==============================================
+           SEARCH MULTIPLE SHEETS
+        ============================================== */
+
         if (event.data.type === "search") {
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[event.data.sheet], { header:1, defval:"" });
-          const headers = (rows.shift() || []).map(value => String(value));
-          const matches = rows.filter(row => row.some(value => event.data.queries.some(query => matchesQuery(value, query))));
-          self.postMessage({ type:"results", sheet:event.data.sheet, headers, rows:matches });
+
+          for (
+            const sheet of event.data.sheets
+          ) {
+
+            const worksheet =
+              workbook.Sheets[sheet];
+
+
+            if (!worksheet) {
+
+              self.postMessage({
+                type:"results",
+                sheet:sheet,
+                headers:[],
+                rows:[]
+              });
+
+              continue;
+            }
+
+
+            const rows =
+              XLSX.utils.sheet_to_json(
+                worksheet,
+                {
+                  header:1,
+                  defval:""
+                }
+              );
+
+
+            const headers =
+              (rows.shift() || [])
+              .map(value =>
+                String(value)
+              );
+
+
+            const matches =
+              rows.filter(row =>
+
+                row.some(value =>
+
+                  event.data.queries.some(query =>
+
+                    matchesQuery(
+                      value,
+                      query
+                    )
+
+                  )
+
+                )
+
+              );
+
+
+            self.postMessage({
+
+              type:"results",
+
+              sheet:sheet,
+
+              headers:headers,
+
+              rows:matches
+
+            });
+
+          }
+
+
+          self.postMessage({
+            type:"searchComplete"
+          });
+
         }
-      } catch (error) {
-        self.postMessage({ type:"error", message:error.message });
+
       }
+
+      catch(error) {
+
+        self.postMessage({
+
+          type:"error",
+
+          message:error.message
+
+        });
+
+      }
+
     };
+
   `;
 
+
+  /* =========================================================
+     CREATE WORKER
+  ========================================================= */
+
   function createWorker() {
-    if (state.worker) state.worker.terminate();
-    state.worker = new Worker(URL.createObjectURL(new Blob([workerSource], { type:"text/javascript" })));
-    state.worker.onmessage = event => {
-      if (event.data.type === "sheets") {
-        const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => event.data.sheets.includes(name));
-        sheetSelect.replaceChildren(...event.data.sheets.map(name => new Option(name, name)));
-        sheetSelect.value = preferred || event.data.sheets[0];
-        state.sheet = sheetSelect.value;
-        sheetSelect.disabled = false;
-        siteInput.disabled = false;
-        searchButton.disabled = false;
-        status.textContent = `${event.data.sheets.length} sheet ditemukan. Menyiapkan data...`;
-      }
-      if (event.data.type === "ready") {
-        state.sheet = sheetSelect.value;
-        state.workbookReady = true;
-        setEnabled(true);
-        status.textContent = "Masukkan Site ID lalu tekan Cari.";
-        clearResults();
-        if (state.pendingSearch) search();
-      }
-      if (event.data.type === "results") {
-        state.sheet = event.data.sheet;
-        state.headers = event.data.headers;
-        state.rows = event.data.rows;
-        renderTable();
-        status.textContent = `${state.rows.length} baris ditemukan di sheet ${state.sheet}.`;
-      }
-      if (event.data.type === "error") {
-        status.textContent = `Gagal memproses workbook: ${event.data.message}`;
-        setEnabled(false);
-      }
-    };
+
+    if (state.worker) {
+      state.worker.terminate();
+    }
+
+
+    state.worker =
+      new Worker(
+
+        URL.createObjectURL(
+
+          new Blob(
+            [workerSource],
+            {
+              type:"text/javascript"
+            }
+          )
+
+        )
+
+      );
+
+
+    state.worker.onmessage =
+      event => {
+
+
+        /* ==============================================
+           SHEET LIST
+        ============================================== */
+
+        if (
+          event.data.type === "sheets"
+        ) {
+
+          renderSheetList(
+            event.data.sheets
+          );
+
+
+          siteInput.disabled = false;
+
+          searchButton.disabled = false;
+
+
+          status.textContent =
+            `${event.data.sheets.length} sheet ditemukan. Menyiapkan data...`;
+
+        }
+
+
+        /* ==============================================
+           WORKBOOK READY
+        ============================================== */
+
+        if (
+          event.data.type === "ready"
+        ) {
+
+          state.workbookReady = true;
+
+          setEnabled(true);
+
+          status.textContent =
+            "Pilih sheet, masukkan Site ID lalu tekan Cari.";
+
+          clearResults();
+
+
+          if (
+            state.pendingSearch
+          ) {
+
+            search();
+
+          }
+
+        }
+
+
+        /* ==============================================
+           RESULT PER SHEET
+        ============================================== */
+
+        if (
+          event.data.type === "results"
+        ) {
+
+          state.results[
+            event.data.sheet
+          ] = {
+
+            headers:event.data.headers,
+
+            rows:event.data.rows
+
+          };
+
+        }
+
+
+        /* ==============================================
+           SEARCH COMPLETE
+        ============================================== */
+
+        if (
+          event.data.type === "searchComplete"
+        ) {
+
+          renderAllResults();
+
+
+          const total =
+            Object.values(
+              state.results
+            )
+            .reduce(
+              (sum, result) =>
+                sum + result.rows.length,
+              0
+            );
+
+
+          const sheetCount =
+            Object.values(
+              state.results
+            )
+            .filter(
+              result =>
+                result.rows.length > 0
+            )
+            .length;
+
+
+          status.textContent =
+            `Selesai. ${total} baris ditemukan dari ${sheetCount} sheet.`;
+
+        }
+
+
+        /* ==============================================
+           ERROR
+        ============================================== */
+
+        if (
+          event.data.type === "error"
+        ) {
+
+          status.textContent =
+            `Gagal memproses workbook: ${event.data.message}`;
+
+          setEnabled(false);
+
+        }
+
+      };
+
+
     return state.worker;
+
   }
 
-  function siteTokens(value) {
-    return [...String(value ?? "").matchAll(/#([^#]+)#/g)].map(match => match[1].trim().toLowerCase());
+
+  /* =========================================================
+     RENDER SHEET CHECKBOX
+  ========================================================= */
+
+  function renderSheetList(sheets) {
+
+    state.sheets = sheets;
+
+    sheetList.replaceChildren();
+
+
+    sheets.forEach(sheet => {
+
+      const label =
+        document.createElement("label");
+
+      label.className =
+        "sheet-item";
+
+
+      const checkbox =
+        document.createElement("input");
+
+      checkbox.type =
+        "checkbox";
+
+      checkbox.value =
+        sheet;
+
+
+      /*
+        Default pilih sheet RET
+      */
+
+      if (
+        sheet === "RETSUBNIT"
+        ||
+        sheet === "Display RET Subunit Dynamic Inf"
+      ) {
+
+        checkbox.checked = true;
+
+      }
+
+
+      /*
+        Jika sheet termasuk knownSheets
+        dan tidak ada RETSUBNIT,
+        otomatis pilih sheet pertama.
+      */
+
+
+      const text =
+        document.createElement("span");
+
+      text.textContent =
+        sheet;
+
+
+      label.append(
+        checkbox,
+        text
+      );
+
+
+      sheetList.append(label);
+
+    });
+
+
+    /*
+      Jika tidak ada RETSUBNIT maupun
+      Display RET Subunit Dynamic Inf,
+      pilih sheet pertama.
+    */
+
+    const checked =
+      sheetList.querySelectorAll(
+        'input[type="checkbox"]:checked'
+      );
+
+
+    if (
+      checked.length === 0 &&
+      sheets.length > 0
+    ) {
+
+      const first =
+        sheetList.querySelector(
+          'input[type="checkbox"]'
+        );
+
+      if (first) {
+        first.checked = true;
+      }
+
+    }
+
   }
+
+
+  /* =========================================================
+     GET SELECTED SHEETS
+  ========================================================= */
+
+  function getSelectedSheets() {
+
+    return [
+      ...sheetList.querySelectorAll(
+        'input[type="checkbox"]:checked'
+      )
+    ]
+    .map(
+      input => input.value
+    );
+
+  }
+
+
+  /* =========================================================
+     ENABLE / DISABLE
+  ========================================================= */
 
   function setEnabled(enabled) {
-    sheetSelect.disabled = !enabled;
-    siteInput.disabled = !enabled;
-    searchButton.disabled = !enabled;
-    clearButton.disabled = !enabled;
+
+    siteInput.disabled =
+      !enabled;
+
+    searchButton.disabled =
+      !enabled;
+
+    clearButton.disabled =
+      !enabled;
+
+    selectAllSheets.disabled =
+      !enabled;
+
+    clearAllSheets.disabled =
+      !enabled;
+
   }
+
+
+  /* =========================================================
+     LOAD FILE
+  ========================================================= */
 
   async function loadFile(file) {
-    if (!file) return;
-    state.workbookReady = false;
-    setEnabled(false);
-    clearResults();
-    const preferred = ["RETSUBNIT", "Display RET Subunit Dynamic Inf"].find(name => knownSheets.includes(name));
-    sheetSelect.replaceChildren(...knownSheets.map(name => new Option(name, name)));
-    sheetSelect.value = preferred || knownSheets[0];
-    sheetSelect.disabled = false;
-    siteInput.disabled = false;
-    searchButton.disabled = false;
-    state.sheet = sheetSelect.value;
-    fileName.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
-    status.textContent = "Daftar sheet siap. Menyiapkan data untuk pencarian...";
-    const buffer = await file.arrayBuffer();
-    createWorker().postMessage({ type:"load", buffer }, [buffer]);
-  }
 
-  function search() {
-    const queries = siteInput.value.split(",")
-      .map(query => query.trim().replace(/^#|#$/g, "").toLowerCase())
-      .filter(Boolean);
-    if (!queries.length) return;
-    if (!state.workbookReady) {
-      state.pendingSearch = true;
-      status.textContent = "Site ID disimpan. Pencarian dimulai setelah data siap.";
+    if (!file) {
       return;
     }
-    state.pendingSearch = false;
-    state.sheet = sheetSelect.value;
-    status.textContent = "Mencari data...";
-    state.worker.postMessage({ type:"search", sheet:state.sheet, queries });
+
+
+    state.workbookReady =
+      false;
+
+    state.results =
+      {};
+
+
+    setEnabled(false);
+
+    clearResults();
+
+
+    fileName.textContent =
+      `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+
+
+    status.textContent =
+      "Membaca workbook...";
+
+
+    const buffer =
+      await file.arrayBuffer();
+
+
+    createWorker()
+      .postMessage(
+        {
+          type:"load",
+          buffer:buffer
+        },
+        [buffer]
+      );
+
   }
 
-  function renderTable() {
-    count.textContent = `${state.rows.length} baris`;
-    exportButton.disabled = state.rows.length === 0;
-    if (!state.headers.length) { tableWrap.innerHTML = '<div class="empty">Sheet tidak memiliki header.</div>'; return; }
-    const table = document.createElement("table");
-    const thead = document.createElement("thead");
-    const headRow = document.createElement("tr");
-    state.headers.forEach(header => { const cell = document.createElement("th"); cell.textContent = header; headRow.append(cell); });
-    thead.append(headRow); table.append(thead);
-    const tbody = document.createElement("tbody");
-    state.rows.forEach(row => { const tr = document.createElement("tr"); state.headers.forEach((_, index) => { const td = document.createElement("td"); td.textContent = row[index] ?? ""; tr.append(td); }); tbody.append(tr); });
-    table.append(tbody); tableWrap.replaceChildren(table);
+
+  /* =========================================================
+     SEARCH
+  ========================================================= */
+
+  function search() {
+
+    const queries =
+      siteInput.value
+
+        .split(",")
+
+        .map(query =>
+          query
+            .trim()
+            .replace(/^#|#$/g, "")
+            .toLowerCase()
+        )
+
+        .filter(Boolean);
+
+
+    if (
+      !queries.length
+    ) {
+
+      status.textContent =
+        "Masukkan minimal satu Site ID.";
+
+      return;
+
+    }
+
+
+    const sheets =
+      getSelectedSheets();
+
+
+    if (
+      !sheets.length
+    ) {
+
+      status.textContent =
+        "Pilih minimal satu sheet.";
+
+      return;
+
+    }
+
+
+    if (
+      !state.workbookReady
+    ) {
+
+      state.pendingSearch =
+        true;
+
+      status.textContent =
+        "Site ID disimpan. Pencarian dimulai setelah data siap.";
+
+      return;
+
+    }
+
+
+    state.pendingSearch =
+      false;
+
+
+    state.results =
+      {};
+
+
+    count.textContent =
+      "Mencari...";
+
+
+    tableWrap.innerHTML =
+      '<div class="empty">Sedang mencari data...</div>';
+
+
+    exportButton.disabled =
+      true;
+
+
+    status.textContent =
+      `Mencari ${queries.length} Site ID pada ${sheets.length} sheet...`;
+
+
+    state.worker.postMessage({
+
+      type:"search",
+
+      sheets:sheets,
+
+      queries:queries
+
+    });
+
   }
 
-  function clearResults() { state.rows = []; state.headers = []; count.textContent = "0 baris"; tableWrap.innerHTML = '<div class="empty">Data hasil pencarian akan muncul di sini.</div>'; exportButton.disabled = true; }
+
+  /* =========================================================
+     RENDER ALL RESULTS
+  ========================================================= */
+
+  function renderAllResults() {
+
+    tableWrap.replaceChildren();
+
+
+    let totalRows = 0;
+
+
+    for (
+      const [sheet, result]
+      of Object.entries(state.results)
+    ) {
+
+      if (
+        !result.rows.length
+      ) {
+
+        continue;
+
+      }
+
+
+      totalRows +=
+        result.rows.length;
+
+
+      const section =
+        document.createElement("div");
+
+      section.className =
+        "result-section";
+
+
+      const title =
+        document.createElement("h3");
+
+      title.className =
+        "result-title";
+
+      title.textContent =
+        `${sheet} — ${result.rows.length} baris`;
+
+
+      section.append(title);
+
+
+      const wrapper =
+        document.createElement("div");
+
+      wrapper.className =
+        "result-table-wrap";
+
+
+      const table =
+        document.createElement("table");
+
+
+      /* HEADER */
+
+      const thead =
+        document.createElement("thead");
+
+
+      const headRow =
+        document.createElement("tr");
+
+
+      result.headers.forEach(
+        header => {
+
+          const cell =
+            document.createElement("th");
+
+          cell.textContent =
+            header;
+
+          headRow.append(cell);
+
+        }
+      );
+
+
+      thead.append(headRow);
+
+      table.append(thead);
+
+
+      /* BODY */
+
+      const tbody =
+        document.createElement("tbody");
+
+
+      result.rows.forEach(row => {
+
+        const tr =
+          document.createElement("tr");
+
+
+        result.headers.forEach(
+          (_, index) => {
+
+            const td =
+              document.createElement("td");
+
+            td.textContent =
+              row[index] ?? "";
+
+            tr.append(td);
+
+          }
+        );
+
+
+        tbody.append(tr);
+
+      });
+
+
+      table.append(tbody);
+
+
+      wrapper.append(table);
+
+      section.append(wrapper);
+
+      tableWrap.append(section);
+
+    }
+
+
+    count.textContent =
+      `${totalRows} baris`;
+
+
+    exportButton.disabled =
+      totalRows === 0;
+
+
+    if (
+      totalRows === 0
+    ) {
+
+      tableWrap.innerHTML =
+        '<div class="empty">Tidak ada data ditemukan.</div>';
+
+    }
+
+  }
+
+
+  /* =========================================================
+     CLEAR RESULTS
+  ========================================================= */
+
+  function clearResults() {
+
+    state.results =
+      {};
+
+
+    count.textContent =
+      "0 baris";
+
+
+    tableWrap.innerHTML =
+      '<div class="empty">Data hasil pencarian akan muncul di sini.</div>';
+
+
+    exportButton.disabled =
+      true;
+
+  }
+
+
+  /* =========================================================
+     EXPORT MULTIPLE SHEETS
+  ========================================================= */
 
   function exportResults() {
-    if (!state.rows.length) return;
-    const worksheet = XLSX.utils.aoa_to_sheet([state.headers, ...state.rows]);
-    worksheet["!freeze"] = { xSplit:0, ySplit:1 };
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, (state.sheet || "Hasil").slice(0, 31));
-    const safeSite = siteInput.value.trim().replace(/[<>:"/\\|?*]/g, "_") || "tanpa_site_id";
-    XLSX.writeFile(workbook, `${state.sheet || "hasil"}_${safeSite}.xlsx`);
+
+    const resultSheets =
+      Object.entries(
+        state.results
+      )
+      .filter(
+        ([_, result]) =>
+          result.rows.length > 0
+      );
+
+
+    if (
+      !resultSheets.length
+    ) {
+
+      status.textContent =
+        "Tidak ada data untuk diexport.";
+
+      return;
+
+    }
+
+
+    /*
+      Buat workbook baru
+    */
+
+    const workbook =
+      XLSX.utils.book_new();
+
+
+    /*
+      Menyimpan nama sheet
+      yang sudah digunakan
+    */
+
+    const usedNames =
+      new Set();
+
+
+    resultSheets.forEach(
+      ([sheetName, result]) => {
+
+
+        /*
+          Buat worksheet
+        */
+
+        const worksheet =
+          XLSX.utils.aoa_to_sheet([
+
+            result.headers,
+
+            ...result.rows
+
+          ]);
+
+
+        /*
+          Freeze header
+        */
+
+        worksheet["!freeze"] = {
+
+          xSplit:0,
+
+          ySplit:1
+
+        };
+
+
+        /*
+          Nama sheet Excel maksimal
+          31 karakter
+        */
+
+        let excelSheetName =
+          sheetName
+
+            .replace(
+              /[\\\/\?\*\[\]\:]/g,
+              "_"
+            )
+
+            .slice(0,31);
+
+
+        /*
+          Jika nama sheet kosong
+        */
+
+        if (
+          !excelSheetName
+        ) {
+
+          excelSheetName =
+            "Hasil";
+
+        }
+
+
+        /*
+          Hindari duplicate sheet name
+        */
+
+        const baseName =
+          excelSheetName;
+
+
+        let counter = 1;
+
+
+        while (
+          usedNames.has(
+            excelSheetName
+          )
+        ) {
+
+          const suffix =
+            `_${counter}`;
+
+
+          excelSheetName =
+            baseName.slice(
+              0,
+              31 - suffix.length
+            )
+            +
+            suffix;
+
+
+          counter++;
+
+        }
+
+
+        usedNames.add(
+          excelSheetName
+        );
+
+
+        /*
+          Tambahkan worksheet
+          ke workbook
+        */
+
+        XLSX.utils.book_append_sheet(
+
+          workbook,
+
+          worksheet,
+
+          excelSheetName
+
+        );
+
+      }
+    );
+
+
+    /*
+      Nama file berdasarkan Site ID
+    */
+
+    const safeSite =
+      siteInput.value
+
+        .trim()
+
+        .replace(
+          /[<>:"\/\\|?*]/g,
+          "_"
+        )
+
+        .replace(
+          /,\s*/g,
+          "_"
+        );
+
+
+    const outputFileName =
+      `Huawei_Dump_${safeSite || "tanpa_site_id"}.xlsx`;
+
+
+    /*
+      Download
+    */
+
+    XLSX.writeFile(
+      workbook,
+      outputFileName
+    );
+
+
+    status.textContent =
+      `${resultSheets.length} sheet berhasil diexport.`;
+
   }
 
-  fileInput.addEventListener("change", event => loadFile(event.target.files[0]));
-  ["dragenter", "dragover"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.add("drag"); }));
-  ["dragleave", "drop"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.remove("drag"); }));
-  dropzone.addEventListener("drop", event => loadFile(event.dataTransfer.files[0]));
-  searchButton.addEventListener("click", search);
-  siteInput.addEventListener("keydown", event => { if (event.key === "Enter") search(); });
-  sheetSelect.addEventListener("change", search);
-  clearButton.addEventListener("click", () => { siteInput.value = ""; clearResults(); status.textContent = "Hasil dibersihkan."; });
-  exportButton.addEventListener("click", exportResults);
+
+  /* =========================================================
+     FILE INPUT
+  ========================================================= */
+
+  fileInput.addEventListener(
+    "change",
+    event => {
+
+      loadFile(
+        event.target.files[0]
+      );
+
+    }
+  );
+
+
+  /* =========================================================
+     DRAG ENTER / OVER
+  ========================================================= */
+
+  [
+    "dragenter",
+    "dragover"
+  ]
+  .forEach(type => {
+
+    dropzone.addEventListener(
+      type,
+      event => {
+
+        event.preventDefault();
+
+        dropzone.classList.add(
+          "drag"
+        );
+
+      }
+    );
+
+  });
+
+
+  /* =========================================================
+     DRAG LEAVE / DROP
+  ========================================================= */
+
+  [
+    "dragleave",
+    "drop"
+  ]
+  .forEach(type => {
+
+    dropzone.addEventListener(
+      type,
+      event => {
+
+        event.preventDefault();
+
+        dropzone.classList.remove(
+          "drag"
+        );
+
+      }
+    );
+
+  });
+
+
+  /* =========================================================
+     DROP FILE
+  ========================================================= */
+
+  dropzone.addEventListener(
+    "drop",
+    event => {
+
+      loadFile(
+        event.dataTransfer.files[0]
+      );
+
+    }
+  );
+
+
+  /* =========================================================
+     SEARCH BUTTON
+  ========================================================= */
+
+  searchButton.addEventListener(
+    "click",
+    search
+  );
+
+
+  /* =========================================================
+     ENTER SITE ID
+  ========================================================= */
+
+  siteInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        search();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================================
+     CLEAR
+  ========================================================= */
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+
+      siteInput.value =
+        "";
+
+      clearResults();
+
+      status.textContent =
+        "Hasil dibersihkan.";
+
+    }
+  );
+
+
+  /* =========================================================
+     SELECT ALL SHEETS
+  ========================================================= */
+
+  selectAllSheets.addEventListener(
+    "click",
+    () => {
+
+      sheetList
+        .querySelectorAll(
+          'input[type="checkbox"]'
+        )
+        .forEach(
+          input => {
+            input.checked = true;
+          }
+        );
+
+      status.textContent =
+        "Semua sheet dipilih.";
+
+    }
+  );
+
+
+  /* =========================================================
+     CLEAR ALL SHEETS
+  ========================================================= */
+
+  clearAllSheets.addEventListener(
+    "click",
+    () => {
+
+      sheetList
+        .querySelectorAll(
+          'input[type="checkbox"]'
+        )
+        .forEach(
+          input => {
+            input.checked = false;
+          }
+        );
+
+      status.textContent =
+        "Semua sheet tidak dipilih.";
+
+    }
+  );
+
+
+  /* =========================================================
+     EXPORT
+  ========================================================= */
+
+  exportButton.addEventListener(
+    "click",
+    exportResults
+  );
+
 </script>
+
 </body>
 </html>
